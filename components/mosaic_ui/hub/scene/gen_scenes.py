@@ -4,7 +4,7 @@
 """Single-scene Mosaic hub: StackView + PageFlow + top Drawer.
 
 Launcher PageFlow tabs:
-  0 Home | 1 Apps
+  0 Home | 1 Apps1 | 2 Apps2
 
 StackView pages:
   0 launcher | 1 notification center | 2 insert notification
@@ -120,7 +120,7 @@ STACK_PAGE_COUNT = 3
 
 # Launcher PageFlow tab indices.
 TAB_HOME = 0
-FLOW_PAGE_COUNT = 2
+FLOW_PAGE_COUNT = 3
 
 # Shared app-icon grid (Figma 时钟 bottom / 应用界面). Coords are relative to
 # the PageFlow layer (stage y=56); absolute screen y = 56 + value.
@@ -149,6 +149,7 @@ HUB_IMAGES = [
     (f'{ASSETS}/icons/album.png', 118, 118),
     (f'{ASSETS}/icons/music.png', 118, 118),
     (f'{ASSETS}/icons/bricks.png', 118, 118),
+    (f'{ASSETS}/icons/classic_games.png', 118, 118),
     (f'{ASSETS}/icons/weather.png', 118, 118),
     *[(f'{ASSETS}/control_center/{name}.png', width, height)
       for name, width, height in (
@@ -329,7 +330,8 @@ def stack_pop_btn(objs, parent, *, x=12, y=14, w=72, h=44, text='Back'):
 
 def place_app_icon(objs, parent, *, name, text, x, y, icon=None,
                    callback=None, events=None, button_text=None,
-                   bg='#181819', visible_bind=None, hidden=False):
+                   bg='#181819', visible_bind=None, hidden=False,
+                   label_size=18):
     """One launcher cell: 118² icon (image or solid button) + label under it."""
     cell = len(objs)
     objs.append(layer(
@@ -350,7 +352,7 @@ def place_app_icon(objs, parent, *, name, text, x, y, icon=None,
         ))
     objs.append(label(
         cell, 0, ICON_SIZE + ICON_LABEL_GAP, ICON_SIZE, ICON_LABEL_H,
-        text, size=18, align='center', callback=cb, events=events,
+        text, size=label_size, align='center', callback=cb, events=events,
     ))
 
 
@@ -372,6 +374,7 @@ def place_app_grid(objs, parent, slots):
             bg=slot.get('bg', '#181819'),
             visible_bind=slot.get('visible_bind'),
             hidden=slot.get('visible_bind') is not None,
+            label_size=slot.get('label_size', 18),
         )
 
 
@@ -390,6 +393,15 @@ def build_apps1_content(objs, parent):
          'callback': 'app_breakout'},
         {'name': 'app_weather', 'icon': 'weather', 'text': 'Weather',
          'callback': 'app_weather'},
+    ))
+
+
+def build_apps2_content(objs, parent):
+    """Apps page 2 — remaining launchers in the fixed 3 x 2 grid."""
+    place_app_grid(objs, parent, (
+        {'name': 'app_classic_games', 'icon': 'classic_games',
+         'text': 'Classic Games', 'callback': 'app_classic_games',
+         'label_size': 16},
     ))
 
 
@@ -801,6 +813,12 @@ def build_hub_objects():
     objs.append(layer(flow, CONTENT_W, 0, CONTENT_W, CONTENT_H,
                       name='launcher_flow_tab1'))
     build_apps1_content(objs, apps1_main)
+
+    # tab2: Apps2 — continuation of the fixed app grid.
+    apps2_main = len(objs)
+    objs.append(layer(flow, CONTENT_W * 2, 0, CONTENT_W, CONTENT_H,
+                      name='launcher_flow_tab2'))
+    build_apps2_content(objs, apps2_main)
 
     # Fixed chrome is authored after PageFlow content so it remains topmost.
     status_bar(objs, launcher_page, ASSETS)
